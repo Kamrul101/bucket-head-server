@@ -31,12 +31,19 @@ async function run() {
 
     const classCollection = client.db("schoolDB").collection("class");
     // const instructorCollection = client.db("schoolDB").collection("instructor");
-    // const cartCollection = client.db("schoolDB").collection("cart");
+    const cartCollection = client.db("schoolDB").collection("cart");
 
     app.get('/class',async(req,res)=>{
         const result = await classCollection.find().toArray();
         res.send(result);
     })
+    
+    app.post('/cart',async (req,res)=>{
+        const item = req.body;
+        const result = await cartCollection.insertOne(item);
+        res.send(result);
+      })
+  
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
