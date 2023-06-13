@@ -160,6 +160,13 @@ async function run() {
         res.send(result)
       });
 
+
+    app.post('/class',async(req,res)=>{
+      const newItem = req.body;
+      const result = await classCollection.insertOne(newItem);
+      res.send(result);
+    })
+
     app.post('/cart',async (req,res)=>{
         const item = req.body;
         const result = await cartCollection.insertOne(item);
