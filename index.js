@@ -48,7 +48,7 @@ async function run() {
 
 
     const classCollection = client.db("schoolDB").collection("class");
-    // const instructorCollection = client.db("schoolDB").collection("instructor");
+    const instructorCollection = client.db("schoolDB").collection("instructor");
     const cartCollection = client.db("schoolDB").collection("cart");
     const usersCollection = client.db("schoolDB").collection("users");
 
@@ -114,10 +114,36 @@ async function run() {
       res.send(result);
     })
 
+
+    app.get('/users/instructor/:email',verifyJWT, async(req,res)=>{
+      const email = req.params.email;
+      if(req.decoded.email !== email){
+        res.send({instructor:false})
+      }
+      const query ={email:email}
+      const user = await usersCollection.findOne(query);
+      const result = {instructor: user ?.role === 'instructor'}
+      res.send(result);
+    })
+
+    app.patch('/users/instructor/:id',async(req,res)=>{
+      // console.log(id);
+      const id = req.params.id;
+      const filter ={_id: new ObjectId(id)};
+      const updatedDoc ={
+        $set: {
+          role: 'instructor'
+        }
+      }
+      const result = await usersCollection.updateOne(filter,updatedDoc);
+      res.send(result);
+    })
+
     app.get('/class',async(req,res)=>{
         const result = await classCollection.find().toArray();
         res.send(result);
     })
+    
 
     app.get('/cart',verifyJWT,async(req,res)=>{
         const email = req.query.email;
