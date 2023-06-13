@@ -50,11 +50,54 @@ async function run() {
     const classCollection = client.db("schoolDB").collection("class");
     // const instructorCollection = client.db("schoolDB").collection("instructor");
     const cartCollection = client.db("schoolDB").collection("cart");
+    const usersCollection = client.db("schoolDB").collection("users");
 
     app.post('/jwt', (req,res)=>{
       const user = req.body;
       const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, { expiresIn:'1h'})
       res.send({token}) 
+    })
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden message' });
+      }
+      next();
+    }
+
+    //users
+    app.get('/users',verifyJWT,verifyAdmin,async(req,res)=>{
+      const result= await usersCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.post('/users',async(req,res)=>{
+      const user = req.body;
+      console.log(user);
+      const query = {email:user.email}
+      const existingUser = await usersCollection.findOne(query);
+      console.log('existing user',existingUser);
+      if(existingUser){
+        return res.send({message: 'user already exist'})
+      }
+      const result= await usersCollection.insertOne(user);
+      res.send(result);
+    })
+
+    app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
+      const email = req.params.email;
+
+      if(req.decoded.email !== email){
+        res.send({admin:false})
+      }
+
+      const query ={email:email}
+      const user = await usersCollection.findOne(query);
+      const result = {admin: user ?.role === 'admin'}
+      res.send(result);
     })
 
     app.get('/class',async(req,res)=>{
