@@ -100,17 +100,35 @@ async function run() {
       res.send(result);
     })
 
+
+    app.patch('/users/admin/:id',async(req,res)=>{
+      // console.log(id);
+      const id = req.params.id;
+      const filter ={_id: new ObjectId(id)};
+      const updatedDoc ={
+        $set: {
+          role: 'admin'
+        }
+      }
+      const result = await usersCollection.updateOne(filter,updatedDoc);
+      res.send(result);
+    })
+
     app.get('/class',async(req,res)=>{
         const result = await classCollection.find().toArray();
         res.send(result);
     })
 
-    app.get('/cart',async(req,res)=>{
+    app.get('/cart',verifyJWT,async(req,res)=>{
         const email = req.query.email;
         
         if(!email){
           res.send([]);
         }
+        const decodedEmail = req.decoded.email;
+      if(email !==decodedEmail){
+        return res.status(403).send({error: true, message: 'Forbidden access'})
+      }
         const query = {email: email};
         const result = await cartCollection.find(query).toArray();
         res.send(result)
